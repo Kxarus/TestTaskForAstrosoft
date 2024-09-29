@@ -24,71 +24,38 @@ enum Result<String>{
 
 struct NetworkManager {
     static let environment : NetworkEnvironment = .production
-    static let MovieAPIKey = ""
     private let router = Router<GistApi>()
     
-    func getNewGists(perPage: Int, page: Int, completion: @escaping (_ gists: [Gist]?,_ error: String?) -> ()) {
-        router.request(.getGists(perPage: perPage, page: page)) { data, response, error in
-            
-            if error != nil {
-                completion(nil, "Please check your network connection.")
-            }
-            
-            if let response = response as? HTTPURLResponse {
-                let result = self.handleNetworkResponse(response)
-                switch result {
-                case .success:
-                    guard let responseData = data else {
-                        completion(nil, NetworkResponse.noData.rawValue)
-                        return
-                    }
-                    
-                    do {
-                        print(responseData)
-                        let jsonData = try JSONSerialization.jsonObject(with: responseData, options: .mutableContainers)
-                        print(jsonData)
-                        let apiResponse = try JSONDecoder().decode(Array<Gist>.self, from: responseData)
-                        completion(apiResponse, nil)
-                      } catch {
-                        print(error)
-                        completion(nil, NetworkResponse.unableToDecode.rawValue)
-                    }
-                case .failure(let networkFailureError):
-                    completion(nil, networkFailureError)
-                }
-            }
+    private func parseResult<T: Decodable>(data: Data?,
+                            response: URLResponse?,
+                            error: Error?,
+                            completion: @escaping (_ data: [T]?,_ error: String?) -> ()) {
+        
+        if error != nil {
+            completion(nil, "Please check your network connection.")
         }
-    }
-    
-    func getCommits(gistId: String, perPage: Int, page: Int, completion: @escaping (_ commits: [Commit]?,_ error: String?) -> ()) {
-        router.request(.getCommits(perPage: perPage, page: page, gistId: gistId)) { data, response, error in
-            
-            if error != nil {
-                completion(nil, "Please check your network connection.")
-            }
-            
-            if let response = response as? HTTPURLResponse {
-                let result = self.handleNetworkResponse(response)
-                switch result {
-                case .success:
-                    guard let responseData = data else {
-                        completion(nil, NetworkResponse.noData.rawValue)
-                        return
-                    }
-                    
-                    do {
-                        print(responseData)
-                        let jsonData = try JSONSerialization.jsonObject(with: responseData, options: .mutableContainers)
-                        print(jsonData)
-                        let apiResponse = try JSONDecoder().decode(Array<Commit>.self, from: responseData)
-                        completion(apiResponse, nil)
-                      } catch {
-                        print(error)
-                        completion(nil, NetworkResponse.unableToDecode.rawValue)
-                    }
-                case .failure(let networkFailureError):
-                    completion(nil, networkFailureError)
+        
+        if let response = response as? HTTPURLResponse {
+            let result = self.handleNetworkResponse(response)
+            switch result {
+            case .success:
+                guard let responseData = data else {
+                    completion(nil, NetworkResponse.noData.rawValue)
+                    return
                 }
+                
+                do {
+                    print(responseData)
+                    let jsonData = try JSONSerialization.jsonObject(with: responseData, options: .mutableContainers)
+                    print(jsonData)
+                    let apiResponse = try JSONDecoder().decode(Array<T>.self, from: responseData)
+                    completion(apiResponse , nil)
+                  } catch {
+                    print(error)
+                    completion(nil, NetworkResponse.unableToDecode.rawValue)
+                }
+            case .failure(let networkFailureError):
+                completion(nil, networkFailureError)
             }
         }
     }
@@ -100,6 +67,20 @@ struct NetworkManager {
         case 501...599: return .failure(NetworkResponse.badRequest.rawValue)
         case 600: return .failure(NetworkResponse.outdated.rawValue)
         default: return .failure(NetworkResponse.failed.rawValue)
+        }
+    }
+}
+
+extension NetworkManager: NetworkManagerProtocol {
+    func getNewGists(perPage: Int, page: Int, completion: @escaping (_ gists: [Gist]?,_ error: String?) -> ()) {
+        router.request(.getGists(perPage: perPage, page: page)) { data, response, error in
+            parseResult(data: data, response: response, error: error ,completion: completion)
+        }
+    }
+    
+    func getCommits(gistId: String, perPage: Int, page: Int, completion: @escaping (_ commits: [Commit]?,_ error: String?) -> ()) {
+        router.request(.getCommits(perPage: perPage, page: page, gistId: gistId)) { data, response, error in
+            parseResult(data: data, response: response, error: error ,completion: completion)
         }
     }
 }
