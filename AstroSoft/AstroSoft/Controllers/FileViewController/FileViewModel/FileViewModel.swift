@@ -13,8 +13,6 @@ protocol FileViewModelDelegate: AnyObject {
 }
 
 final class FileViewModel {
-    private let networkManager: NetworkManager = NetworkManager()
-    
     weak var delegate: FileViewModelDelegate?
 
     init(fileUrl: String) {

@@ -13,7 +13,7 @@ protocol DetailViewModelDelegate: AnyObject {
 }
 
 final class DetailViewModel {
-    private let networkManager: NetworkManager = NetworkManager()
+    private let networkManager: NetworkManagerProtocol = NetworkManager()
     private let gist: Gist
     private var commits: [Commit] = []
     private var currentPage = 1

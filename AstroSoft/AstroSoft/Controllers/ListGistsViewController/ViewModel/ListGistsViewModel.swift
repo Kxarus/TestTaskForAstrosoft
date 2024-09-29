@@ -13,7 +13,7 @@ protocol ListGistsViewModelDelegate: AnyObject {
 
 final class ListGistsViewModel {
     
-    private let networkManager: NetworkManager = NetworkManager()
+    private let networkManager: NetworkManagerProtocol = NetworkManager()
     
     var rows: [ItemModel] {
         didSet {
