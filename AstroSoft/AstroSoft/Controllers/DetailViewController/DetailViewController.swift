@@ -7,7 +7,7 @@
 
 import UIKit
 
-class DetailViewController: UIViewController {
+final class DetailViewController: UIViewController {
     // MARK: - UI
     private var collectionView: UICollectionView!
     private var refControl: UIRefreshControl!
