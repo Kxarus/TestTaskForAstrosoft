@@ -60,7 +60,8 @@ final class DetailViewModel {
             
             commits.forEach {
                 items.append(.empty(height: 5))
-                items.append(.text(text: $0.url ?? "", textSize: 16))
+                let commit = "\($0.user?.login ?? ""): \($0.version ?? "")"
+                items.append(.text(text: commit, textSize: 16))
             }
         }
 
